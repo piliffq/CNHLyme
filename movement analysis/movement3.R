@@ -1,11 +1,11 @@
-##########################
+# ********************************************************************************
 # Pallavi Kache
 # Tick App: Movement Analysis (2018)
-# Script 3: Percent Land Cover for each Individual
+# Script 3: Percent Land Cover for each Individual & Figures
 
 # Created: Oct. 28, 2019
 # Updated: Nov. 17, 2019
-#
+# ********************************************************************************
 
 # PART 1. DATA CONFIGURATION AND DOWNLOAD ----------------------------------------
 
@@ -13,20 +13,27 @@
 packages=c("plyr","ggplot2","devtools","reshape2","dplyr","raster","sp","rgdal","stringr","reshape","classInt")
 lapply(packages,library,character.only=TRUE)
 
-# 1B. Read in Data
-movement=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\mobilitystats_7days_V3.csv")
-users=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\implementation_paper.csv")
-states=readOGR("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\shapefiles\\states",layer="states")
+# 1B. Read in Data Tables
 GPS=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\GPStotal_database.csv")
-nlcd=raster("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\shapefiles\\NLCD_2016_Land_Cover_L48_20190424 (1)\\NLCD_2016_Land_Cover_L48_20190424.img")
+   # original 2018 movement data 
+users=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\implementation_paper.csv")
+   # original 2018 baseline survey data
+movement=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\mobilitystats_7days_V3.csv")
+   # derived movement distance statistics from "movement2" script (restricted to users with 7 or more days)
 
-# 1C. Select baseline survey variables of interest
+# 1C. Read in Shapefiles
+states=readOGR("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\shapefiles\\states",layer="states")
+   # convert to NLCD data pull using get_FED (not working)
+nlcd=raster("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\shapefiles\\NLCD_2016_Land_Cover_L48_20190424 (1)\\NLCD_2016_Land_Cover_L48_20190424.img")
+  # convert to NLCD data pull using get_FED (not working)
+
+# 1D. Select baseline survey variables of interest
 vars_users=c("user_id","County","State","Region","Town","Zipcode","Age","Gender","previousTBD","pastLD",
              "pastTick","work_outdoors","outdooractivity","peridomesticactivity","check.tick",
              "Housetype","pet","pet.tick","ndogs","Tickdogs","ncats","Tickcats")
 users2=users[vars_users]
 
-# 1D. Join summary movement data with new baseline survey data
+# 1E. Join summary movement data with new baseline survey data
 movement2=join(movement,users2,by="user_id",type="left",match="all")
 
 # PART 2. GENERATE PERCENT LAND COVER FOR EACH INDIVIDUAL ------------------
@@ -68,28 +75,47 @@ user1=colMeans(user1[2:length(user1)])
 user1=round(user1,2)
 user1
 
-# Part 3. FIGURES --------------------------------------------------------------
+# Manually created 
 
-# Change violin plot colors by groups
+# Part 3. FIGURES --------------------------------------------------------------
+# 3A. Read in data
+movement_landcover=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\mobility_landcover.csv")
+
+# 3B. Configure data for plot
 movement_landcover[is.na(movement_landcover)]=0
-movement_landcover=movement_landcover[,c(1:2,5:8,10,12)]
+movement_landcover=movement_landcover[,c(1:2,5:8,10:12)]
 movement_landcover2=melt(movement_landcover, id.vars=c("ID", "user_id"))
 movement_landcover2=join(movement_landcover2,users2[,c("user_id","State","Age","Gender","pastLD","pastTick","Housetype")],by="user_id",type="left",match="all")
+
+movement_landcover2_states=movement_landcover2[which(movement_landcover2$State == c("Wisconsin","New York","Illinois")),]
 movement_landcover2_WINY=movement_landcover2[which(movement_landcover2$State == c("Wisconsin","New York")),]
 
-p_state=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=State)) +
+# 3C. Plot land cover by state
+# Boxplot
+plot_state1=ggplot(movement_landcover2_WINY, aes(x=variable, y=value, fill=State)) +
+  geom_boxplot()
+plot_state1
+
+# Violin Plot
+plot_state2=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=State)) +
   geom_violin() + scale_y_log10() 
-p_state
+plot_state2
 
-p_LD=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=pastLD)) +
+# 3D. Plot land cover by previous lyme disease
+# ********** INTERESTING!***********
+plot_LD=ggplot(movement_landcover2_WINY, aes(x=variable, y=value, fill=pastLD)) +
+  geom_boxplot()
+plot_LD
+
+plot_LD2=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=pastLD)) +
   geom_violin()+scale_y_log10()
-p_LD
+plot_LD2
 
+# 3E. Plot land cover by housing type
 p_house=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=Housetype)) +
   geom_violin()+scale_y_log10()
 p_house
 
-#################################################################################
 # FINAL DATABASES. --------------------------------------------------------------
 
 #LANDCOVER DATA
@@ -100,8 +126,7 @@ movement3=join(movement2,movement_landcover,by="user_id",type="left",match="all"
 write.csv(movement3,"C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\mobilitystats_V4.csv")
 
 
-#################################################################################
-# IN PROGRESS. FOR LOOP FOR PART 2 ---------------------------------------------
+# IN PROGRESS. CONVERT PART 2 INTO FOR LOOP ---------------------------------------------
 
 list.files(
   path=c("c:/program files", "c:/program files (x86)"), 
@@ -115,11 +140,7 @@ users=unique(movement2$user_id)
 flw=vector("list", length(users))
 
 for(i in seq_along(users)){
-  print(users[i])
-  
-  
-  
-}
+  print(users[i])}
 
 
 movement4 = NULL
