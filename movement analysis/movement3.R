@@ -1,5 +1,13 @@
-###################################################################################
-# Part 1. Configuration and Data Download
+##########################
+# Pallavi Kache
+# Tick App: Movement Analysis (2018)
+# Script 3: Percent Land Cover for each Individual
+
+# Created: Oct. 28, 2019
+# Updated: Nov. 17, 2019
+#
+
+# PART 1. DATA CONFIGURATION AND DOWNLOAD ----------------------------------------
 
 # 1A. Install Packages
 packages=c("plyr","ggplot2","devtools","reshape2","dplyr","raster","sp","rgdal","stringr","reshape","classInt")
@@ -21,8 +29,7 @@ users2=users[vars_users]
 # 1D. Join summary movement data with new baseline survey data
 movement2=join(movement,users2,by="user_id",type="left",match="all")
 
-###################################################################################
-# Part 2. Generate Percent Land Cover for Each Individual
+# PART 2. GENERATE PERCENT LAND COVER FOR EACH INDIVIDUAL ------------------
 # *** NEED TO CONVERT TO FUNCTION/FOR LOOP*****
 
 # 2A. Select individual user id
@@ -61,36 +68,29 @@ user1=colMeans(user1[2:length(user1)])
 user1=round(user1,2)
 user1
 
-###################################################################
-# Part 3. 
+# Part 3. FIGURES --------------------------------------------------------------
 
 # Change violin plot colors by groups
-ToothGrowth$dose=as.factor(ToothGrowth$dose)
-head(ToothGrowth)
+movement_landcover[is.na(movement_landcover)]=0
+movement_landcover=movement_landcover[,c(1:2,5:8,10,12)]
+movement_landcover2=melt(movement_landcover, id.vars=c("ID", "user_id"))
+movement_landcover2=join(movement_landcover2,users2[,c("user_id","State","Age","Gender","pastLD","pastTick","Housetype")],by="user_id",type="left",match="all")
+movement_landcover2_WINY=movement_landcover2[which(movement_landcover2$State == c("Wisconsin","New York")),]
 
-data_summary <- function(x) {
-  m <- mean(x)
-  ymin <- m-sd(x)
-  ymax <- m+sd(x)
-  return(c(y=m,ymin=ymin,ymax=ymax))
-}
+p_state=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=State)) +
+  geom_violin() + scale_y_log10() 
+p_state
 
-ggplot(ToothGrowth, aes(x=dose, y=len, fill=supp)) +
-  geom_violin()
-# Change the position
-p<-ggplot(ToothGrowth, aes(x=dose, y=len, fill=supp)) +
-  geom_violin(position=position_dodge(1))
-p
+p_LD=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=pastLD)) +
+  geom_violin()+scale_y_log10()
+p_LD
 
-
-
-
-
-
-
+p_house=ggplot(movement_landcover2_WINY, aes(x=variable, y=value,fill=Housetype)) +
+  geom_violin()+scale_y_log10()
+p_house
 
 #################################################################################
-#Final Databases
+# FINAL DATABASES. --------------------------------------------------------------
 
 #LANDCOVER DATA
 #movement_landcover=read.csv("C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\mobility_landcover.csv")
@@ -99,7 +99,17 @@ p
 movement3=join(movement2,movement_landcover,by="user_id",type="left",match="all")
 write.csv(movement3,"C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\mobilitystats_V4.csv")
 
+
 #################################################################################
+# IN PROGRESS. FOR LOOP FOR PART 2 ---------------------------------------------
+
+list.files(
+  path=c("c:/program files", "c:/program files (x86)"), 
+  pattern="git.exe", 
+  full.names=TRUE,
+  recursive=TRUE
+)
+
 users=unique(movement2$user_id)
 
 flw=vector("list", length(users))
