@@ -82,6 +82,3 @@ names(summary_total2)=c("dist","key")
 summary_total2=spread(summary_total2, key, dist)
 summary_total=cbind(summary_total,summary_total2)
 data_wide
-
-write.csv(totaldist,"C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\clean\\totaldist_User15.csv")
-hist(totaldist$total_dist)
