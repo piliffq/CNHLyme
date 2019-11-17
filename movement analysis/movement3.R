@@ -61,7 +61,7 @@ user1=colMeans(user1[2:length(user1)])
 user1=round(user1,2)
 user1
 
-###################################################################################
+###################################################################
 # Part 3. 
 
 # Change violin plot colors by groups
@@ -100,13 +100,6 @@ movement3=join(movement2,movement_landcover,by="user_id",type="left",match="all"
 write.csv(movement3,"C:\\Users\\Pallavi Kache\\Documents\\Amazon Photos Downloads\\Diuk-Wasser\\Projects\\TickApp\\data\\mobilitystats_V4.csv")
 
 #################################################################################
-list.files(
-  path=c("c:/program files", "c:/program files (x86)"), 
-  pattern="git.exe", 
-  full.names=TRUE,
-  recursive=TRUE
-)
-
 users=unique(movement2$user_id)
 
 flw=vector("list", length(users))
