@@ -62,6 +62,8 @@ for(i in seq(0.05, 0.55, 0.1)) {
 
 }
 
+#modification - delete
+
 #remove first line in ref file and write a csv file.
 landscape_ref <- as.data.frame(landscape_ref[-1,])
 write.csv(landscape_ref, "landscape/rasters/landscape_ref.csv", row.names=F)
